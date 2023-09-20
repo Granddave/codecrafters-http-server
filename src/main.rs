@@ -22,6 +22,22 @@ fn main() {
                             let response = "HTTP/1.1 200 OK\r\n\r\n";
                             stream.write(response.as_bytes()).unwrap();
                         }
+                        "/user-agent" => {
+                            let headers = lines[1..].iter().map(|x| x.to_string()).collect_vec();
+                            let user_agent = headers
+                                .iter()
+                                .find(|x| x.starts_with("User-Agent: "))
+                                .unwrap()
+                                .replace("User-Agent: ", "")
+                                .to_string();
+                            let res = format!(
+                                "Content-type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
+                                user_agent.len(),
+                                user_agent,
+                            );
+                            let response = format!("HTTP/1.1 200 OK\r\n{}", res);
+                            stream.write(response.as_bytes()).unwrap();
+                        }
                         _ if start_line[1].starts_with("/echo/") => {
                             let echo = start_line[1].replace("/echo/", "");
                             let res = format!(
