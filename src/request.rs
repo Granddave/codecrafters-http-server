@@ -4,10 +4,10 @@ use itertools::Itertools;
 
 #[derive(PartialEq, Debug)]
 pub enum HTTPMethod {
-    GET,
-    POST,
-    PUT,
-    DELETE,
+    Get,
+    Post,
+    Put,
+    Delete,
 }
 
 pub struct HTTPRequest {
@@ -46,10 +46,10 @@ impl HTTPRequest {
         let start_line = lines[0].split_whitespace().collect_vec();
         Some(HTTPRequest {
             method: match start_line[0] {
-                "GET" => HTTPMethod::GET,
-                "POST" => HTTPMethod::POST,
-                "PUT" => HTTPMethod::PUT,
-                "DELETE" => HTTPMethod::DELETE,
+                "GET" => HTTPMethod::Get,
+                "POST" => HTTPMethod::Post,
+                "PUT" => HTTPMethod::Put,
+                "DELETE" => HTTPMethod::Delete,
                 _ => return None,
             },
             path: start_line[1].to_string(),
@@ -71,7 +71,7 @@ mod tests {
              Accept: */*\r\n\r\n",
         )
         .unwrap();
-        assert_eq!(request.method, HTTPMethod::GET);
+        assert_eq!(request.method, HTTPMethod::Get);
         assert_eq!(request.path, "/");
         assert_eq!(request.version, "HTTP/1.1");
         assert_eq!(request.headers.len(), 3);
