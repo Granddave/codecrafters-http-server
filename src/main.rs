@@ -16,7 +16,7 @@ fn main() {
         None => serve_dir,
     };
 
-    println!("Serving directory: {}", serve_dir);
+    println!("Serving directory: '{}'", serve_dir);
 
     for stream in listener.incoming() {
         match stream {

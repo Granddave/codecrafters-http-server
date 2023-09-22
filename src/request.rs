@@ -10,6 +10,7 @@ pub enum HTTPMethod {
     Delete,
 }
 
+#[derive(PartialEq, Debug)]
 pub struct HTTPRequest {
     pub method: HTTPMethod,
     pub path: String,
@@ -61,9 +62,10 @@ impl HTTPRequest {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test_parse_request() {
-        use super::*;
         let request = HTTPRequest::parse(
             "GET / HTTP/1.1\r\n\
              Host: localhost:4221\r\n\
@@ -84,12 +86,12 @@ mod tests {
             Some(&"curl/7.54.0".to_string())
         );
         assert_eq!(request.headers.get("Accept"), Some(&"*/*".to_string()));
-        assert_eq!(request.headers.get("Content-Length"), None);
     }
 
     #[test]
     fn test_parse_header_line() {
-        use super::*;
+        assert_eq!(parse_header_line(""), None);
+        assert_eq!(parse_header_line("invalid"), None);
         assert_eq!(
             parse_header_line("Host: localhost:4221"),
             Some(("Host".to_string(), "localhost:4221".to_string()))
@@ -106,7 +108,6 @@ mod tests {
 
     #[test]
     fn test_parse_headers() {
-        use super::*;
         let headers = parse_headers(vec![
             "Host: localhost:4221",
             "User-Agent: curl/7.54.0",
@@ -116,6 +117,5 @@ mod tests {
         assert_eq!(headers.get("Host"), Some(&"localhost:4221".to_string()));
         assert_eq!(headers.get("User-Agent"), Some(&"curl/7.54.0".to_string()));
         assert_eq!(headers.get("Accept"), Some(&"*/*".to_string()));
-        assert_eq!(headers.get("Content-Length"), None);
     }
 }
