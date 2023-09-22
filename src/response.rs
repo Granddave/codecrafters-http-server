@@ -21,6 +21,15 @@ impl HTTPResponse {
         }
     }
 
+    pub fn created() -> HTTPResponse {
+        HTTPResponse {
+            status_code: 201,
+            status_text: "Created".to_string(),
+            headers: HashMap::new(),
+            body: "".to_string(),
+        }
+    }
+
     pub fn bad_request() -> HTTPResponse {
         HTTPResponse {
             status_code: 400,

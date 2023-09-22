@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum HTTPMethod {
     Get,
     Post,
@@ -16,6 +16,7 @@ pub struct HTTPRequest {
     pub path: String,
     pub version: String,
     pub headers: HashMap<String, String>,
+    pub body: Option<Vec<u8>>,
 }
 
 fn parse_headers(headers: Vec<&str>) -> HashMap<String, String> {
@@ -45,17 +46,27 @@ impl HTTPRequest {
     pub fn parse(request: &str) -> Option<HTTPRequest> {
         let lines = request.lines().collect_vec();
         let start_line = lines[0].split_whitespace().collect_vec();
+        let method = match start_line[0] {
+            "GET" => HTTPMethod::Get,
+            "POST" => HTTPMethod::Post,
+            "PUT" => HTTPMethod::Put,
+            "DELETE" => HTTPMethod::Delete,
+            _ => return None,
+        };
         Some(HTTPRequest {
-            method: match start_line[0] {
-                "GET" => HTTPMethod::Get,
-                "POST" => HTTPMethod::Post,
-                "PUT" => HTTPMethod::Put,
-                "DELETE" => HTTPMethod::Delete,
-                _ => return None,
-            },
+            method,
             path: start_line[1].to_string(),
             version: start_line[2].to_string(),
             headers: parse_headers(lines[1..].to_vec()),
+            body: if matches!(method, HTTPMethod::Post | HTTPMethod::Put) {
+                Some(
+                    request.split("\r\n\r\n").collect_vec()[1]
+                        .as_bytes()
+                        .to_vec(),
+                )
+            } else {
+                None
+            },
         })
     }
 }
@@ -86,6 +97,32 @@ mod tests {
             Some(&"curl/7.54.0".to_string())
         );
         assert_eq!(request.headers.get("Accept"), Some(&"*/*".to_string()));
+    }
+
+    #[test]
+    fn test_parse_post_request() {
+        let request = HTTPRequest::parse(
+            "POST / HTTP/1.1\r\n\
+             Host: localhost:4221\r\n\
+             User-Agent: curl/7.54.0\r\n\
+             Accept: */*\r\n\r\n\
+             Hello, World!",
+        )
+        .unwrap();
+        assert_eq!(request.method, HTTPMethod::Post);
+        assert_eq!(request.path, "/");
+        assert_eq!(request.version, "HTTP/1.1");
+        assert_eq!(request.headers.len(), 3);
+        assert_eq!(
+            request.headers.get("Host"),
+            Some(&"localhost:4221".to_string())
+        );
+        assert_eq!(
+            request.headers.get("User-Agent"),
+            Some(&"curl/7.54.0".to_string())
+        );
+        assert_eq!(request.headers.get("Accept"), Some(&"*/*".to_string()));
+        assert_eq!(request.body, Some("Hello, World!".as_bytes().to_vec()));
     }
 
     #[test]
